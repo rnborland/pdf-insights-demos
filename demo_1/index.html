@@ -50,10 +50,124 @@
     </div>
 
     <div class="chatbot-box">
-      <!-- Paste generated chatbot embed code below this line -->
+      <!-- PDF-Insights.ai Embeddable Chat Widget -->
+<div id="pdf-insights-chat-root"></div>
+<script>
+(function () {
+  const config = {
+    apiBase: "https://users.pdf-insights.ai",
+    apiKey: "pdi_live_65567a57c1351d0022a3cfb23288c390155c5ec4",
+    pdfId: "edcbed7c-cea5-4a0f-b882-6dddd9fc7125",
+    companyName: "Your Company",
+    title: "Ask Our Assistant",
+    model: "gpt-4o-mini",
+    systemPrompt: `You are a helpful assistant for the selected PDF. Base your answers on the uploaded document. If the document does not clearly support an answer, say so. Keep answers practical and concise.`,
+    accent: "#4f8cff"
+  };
 
+  const sessionId = (window.crypto && crypto.randomUUID)
+    ? crypto.randomUUID()
+    : 'sess_' + Math.random().toString(36).slice(2);
 
-      <!-- Paste generated chatbot embed code above this line -->
+  const root = document.getElementById('pdf-insights-chat-root');
+  if (!root) return;
+
+  root.innerHTML =     '<div style="font-family:Arial,Helvetica,sans-serif;max-width:420px;border:1px solid #d9e2ff;border-radius:16px;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,.12);background:#fff">' +
+      '<div style="background:' + config.accent + ';color:#fff;padding:14px 16px">' +
+        '<div style="font-size:12px;opacity:.9">' + config.companyName + '</div>' +
+        '<div style="font-size:18px;font-weight:700;margin-top:2px">' + config.title + '</div>' +
+      '</div>' +
+      '<div id="piChatMessages" style="height:360px;overflow:auto;padding:14px;background:#f7f9ff"></div>' +
+      '<div style="border-top:1px solid #e8edff;padding:12px;background:#fff">' +
+        '<textarea id="piChatInput" placeholder="Ask a question about this document..." style="width:100%;height:86px;resize:vertical;padding:10px;border:1px solid #ccd7ff;border-radius:10px;font-size:14px"></textarea>' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;gap:10px">' +
+          '<div id="piChatStatus" style="font-size:12px;color:#5d6998"></div>' +
+          '<button id="piChatSend" style="background:' + config.accent + ';color:#fff;border:none;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer">Send</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+
+  const messages = root.querySelector('#piChatMessages');
+  const input = root.querySelector('#piChatInput');
+  const sendBtn = root.querySelector('#piChatSend');
+  const status = root.querySelector('#piChatStatus');
+
+  function addBubble(text, who) {
+    const wrap = document.createElement('div');
+    wrap.style.margin = '0 0 12px';
+    wrap.style.display = 'flex';
+    wrap.style.justifyContent = who === 'user' ? 'flex-end' : 'flex-start';
+
+    const bubble = document.createElement('div');
+    bubble.style.maxWidth = '85%';
+    bubble.style.padding = '10px 12px';
+    bubble.style.borderRadius = '12px';
+    bubble.style.whiteSpace = 'pre-wrap';
+    bubble.style.lineHeight = '1.45';
+    bubble.style.fontSize = '14px';
+    bubble.style.background = who === 'user' ? '#dce7ff' : '#ffffff';
+    bubble.style.border = '1px solid #d9e2ff';
+    bubble.textContent = text;
+
+    wrap.appendChild(bubble);
+    messages.appendChild(wrap);
+    messages.scrollTop = messages.scrollHeight;
+  }
+
+  async function sendMessage() {
+    const message = input.value.trim();
+    if (!message) return;
+    if (!config.apiKey || !config.pdfId) {
+      status.textContent = 'Missing API key or PDF ID.';
+      return;
+    }
+
+    addBubble(message, 'user');
+    input.value = '';
+    status.textContent = 'Thinking...';
+    sendBtn.disabled = true;
+
+    try {
+      const resp = await fetch(config.apiBase + '/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + config.apiKey
+        },
+        body: JSON.stringify({
+          session_id: sessionId,
+          pdf_id: config.pdfId,
+          message: message,
+          model: config.model,
+          system_prompt: config.systemPrompt
+        })
+      });
+
+      const data = await resp.json().catch(() => ({}));
+      if (!resp.ok) {
+        throw new Error(data.detail || data.error || ('Request failed: ' + resp.status));
+      }
+
+      addBubble(data.answer || '(No answer returned)', 'bot');
+      status.textContent = '';
+    } catch (err) {
+      addBubble('Error: ' + (err.message || err), 'bot');
+      status.textContent = 'Request failed.';
+    } finally {
+      sendBtn.disabled = false;
+    }
+  }
+
+  sendBtn.addEventListener('click', sendMessage);
+  input.addEventListener('keydown', function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') sendMessage();
+  });
+
+  addBubble('Hello. Ask a question about this document.', 'bot');
+})();
+</script>
+
+     
     </div>
   </div>
 </body>
