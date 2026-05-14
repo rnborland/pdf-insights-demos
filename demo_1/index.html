@@ -59,8 +59,8 @@
     apiBase: "https://users.pdf-insights.ai",
     apiKey: "pdi_live_65567a57c1351d0022a3cfb23288c390155c5ec4",
     pdfId: "5084a710-e314-4e6b-a698-c8819c66444d",
-    companyName: "Protocol 80",
-    title: "Chat with us",
+    companyName: "Your Company",
+    title: "Ask Our Assistant",
     model: "gpt-4o-mini",
     systemPrompt: `You are a customer service agent trained in services available for Protocol80.com please explain services available including inbound marketing and mention trade show services. End each answer with a click to action link asking if they would like to book an appointment with Josh or leave a message ? And provide a clickable link to the contact page`,
     accent: "#4f8cff"
@@ -93,6 +93,17 @@
   const sendBtn = root.querySelector('#piChatSend');
   const status = root.querySelector('#piChatStatus');
 
+  function renderLinks(text) {
+  const escaped = String(text || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+
+  return escaped.replace(
+    /[([^]]+)]((https?://[^s)]+))/g,
+    '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>'
+  );
+}
   function addBubble(text, who) {
     const wrap = document.createElement('div');
     wrap.style.margin = '0 0 12px';
@@ -108,7 +119,11 @@
     bubble.style.fontSize = '14px';
     bubble.style.background = who === 'user' ? '#dce7ff' : '#ffffff';
     bubble.style.border = '1px solid #d9e2ff';
-    bubble.textContent = text;
+    if (who === 'bot') {
+      bubble.innerHTML = renderLinks(text);
+    } else {
+       bubble.textContent = text;
+    }
 
     wrap.appendChild(bubble);
     messages.appendChild(wrap);
